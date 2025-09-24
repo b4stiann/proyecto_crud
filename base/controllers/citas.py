@@ -14,7 +14,15 @@ def dashboard():
     citas = Cita.obtener_todas()
     favoritos = Cita.obtener_favoritos_de_usuario(session['usuario_id'])
     favoritos_ids = {c['id'] for c in favoritos}
-    return render_template('dashboard.html', usuario=usuario, citas=citas, favoritos=favoritos, favoritos_ids=favoritos_ids)
+    # Excluir de la lista principal las citas ya marcadas como favoritas (requisito cinturón negro)
+    citas_no_favoritas = [c for c in citas if c['id'] not in favoritos_ids]
+    return render_template(
+        'dashboard.html',
+        usuario=usuario,
+        citas=citas_no_favoritas,
+        favoritos=favoritos,
+        favoritos_ids=favoritos_ids,
+    )
 
 
 @bp.post('/agregar')
