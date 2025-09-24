@@ -15,11 +15,14 @@
 {% endif %}
 {% endwith %}
 <!-- Formulario para editar la cita -->
-<form action="/citas/procesar_editar" method="post">
-<input type="hidden" name="id" value="{{ cita.id }}">
+<form action="/citas/editar/{{ cita.id }}" method="post">
+<div class="mb-3">
+<label for="autor" class="form-label">Autor:</label>
+<input type="text" name="autor" class="form-control" value="{{ cita.autor }}"/>
+</div>
 <div class="mb-3">
 <label for="cita" class="form-label">Cita:</label>
-<textarea name="cita" class="form-control">{{ cita.cita }}</textarea>
+<textarea name="cita" class="form-control" rows="3">{{ cita.cita }}</textarea>
 </div>
 <button type="submit" class="btn btn-warning">Actualizar</button>
 </form>

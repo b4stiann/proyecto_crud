@@ -10,7 +10,7 @@
 <div class="card mb-3">
 <div class="card-body">
 <p class="card-text">"{{ cita.cita }}"</p>
-<p class="text-muted">Publicada el: {{ cita.creado_en | format_date }}</p>
+<p class="text-muted">Publicada el: {{ cita.created_at | format_date }}</p>
 
 <!-- Botones para editar y borrar la cita -->
 <a href="/citas/editar/{{ cita.id }}" class="btn btn-outline-warning btn-sm">Editar</a>
