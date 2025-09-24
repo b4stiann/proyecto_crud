@@ -2,76 +2,93 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="container mt-4">
-<h1>¡Hola, {{ usuario.nombre|capitalize }}!</h1>
+  <h1>¡Hola, {{ usuario.nombre|capitalize }}!</h1>
 
-<div class="row mb-4">
-  <div class="col-md-8">
-    <form action="/citas/agregar" method="post" class="card card-body shadow-sm">
-      <h5 class="mb-3">Agregar Cita</h5>
-      {% with messages = get_flashed_messages(category_filter=['cita']) %}
-      {% if messages %}
-      <ul class="text-danger small">
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-      {% endwith %}
-      <div class="mb-2">
-        <label class="form-label">Autor</label>
-        <input type="text" class="form-control" name="autor" />
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <form action="/citas/agregar" method="post" class="card card-body shadow-sm">
+        <h5 class="mb-3">Agregar Cita</h5>
+        {% with messages = get_flashed_messages(category_filter=['cita']) %}
+        {% if messages %}
+        <ul class="text-danger small">
+          {% for message in messages %}
+          <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        <div class="mb-2">
+          <label class="form-label">Autor</label>
+          <input type="text" class="form-control" name="autor" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Cita</label>
+          <textarea class="form-control" name="cita" rows="2"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" type="submit">Publicar</button>
+      </form>
+    </div>
+    <div class="col-md-4">
+      <div class="card card-body shadow-sm">
+        <h5 class="mb-3">Mis Favoritos</h5>
+        {% if favoritos %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="width:55%">Cita</th>
+                <th style="width:25%">Autor</th>
+                <th style="width:20%" class="text-end">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in favoritos %}
+              <tr>
+                <td>"{{ f.cita }}"</td>
+                <td>{{ f.autor }}</td>
+                <td class="text-end">
+                  <a class="btn btn-outline-danger btn-sm" href="/citas/remover_favorito/{{ f.id }}">Quitar</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No tienes favoritos aún.</p>
+        {% endif %}
       </div>
-      <div class="mb-2">
-        <label class="form-label">Cita</label>
-        <textarea class="form-control" name="cita" rows="2"></textarea>
-      </div>
-      <button class="btn btn-primary btn-sm" type="submit">Publicar</button>
-    </form>
-  </div>
-  <div class="col-md-4">
-    <div class="card card-body shadow-sm">
-      <h5 class="mb-3">Mis Favoritos</h5>
-      {% if favoritos %}
-      <ul class="list-unstyled">
-        {% for f in favoritos %}
-        <li class="mb-2">
-          <span>"{{ f.cita }}" — <em>{{ f.autor }}</em></span>
-          <a class="btn btn-outline-danger btn-sm" href="/citas/remover_favorito/{{ f.id }}">Quitar</a>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="text-muted small">No tienes favoritos aún.</p>
-      {% endif %}
     </div>
   </div>
- </div>
 
-<h2>Citas Disponibles</h2>
-<div class="row">
-{% for cita in citas %}
-<div class="col-md-6 mb-4">
-<div class="card h-100 shadow-sm">
-<div class="card-body">
-<p class="card-text">"{{ cita.cita }}" - por <strong>{{ cita.autor }}</strong></p>
-<p class="text-muted small">Publicado el: {{ cita.created_at | format_date }}</p>
-<hr>
-{% if cita.id in favoritos_ids %}
-<a href="/citas/remover_favorito/{{ cita.id }}" class="btn btn-outline-danger btn-sm me-2">Quitar de Favoritos</a>
-{% else %}
-<a href="/citas/agregar_favorito/{{ cita.id }}" class="btn btn-primary btn-sm me-2">Añadir a Favoritos</a>
-{% endif %}
-{% if cita.usuario_id == session['usuario_id'] %}
-<a href="/citas/editar/{{ cita.id }}" class="btn btn-warning btn-sm me-2">Editar</a>
-<a href="/citas/borrar/{{ cita.id }}" class="btn btn-danger btn-sm">Borrar</a>
-{% endif %}
+  <h2>Todas las Citas</h2>
+  <div class="row">
+    {% if citas %}
+      {% for cita in citas %}
+      <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <p class="card-text">"{{ cita.cita }}" - por <strong>{{ cita.autor }}</strong></p>
+            <p class="text-muted small">Publicado el: {{ cita.created_at | format_date }}</p>
+            <hr>
+            {% if cita.id in favoritos_ids %}
+              <a href="/citas/remover_favorito/{{ cita.id }}" class="btn btn-outline-danger btn-sm me-2">Quitar de Favoritos</a>
+            {% else %}
+              <a href="/citas/agregar_favorito/{{ cita.id }}" class="btn btn-primary btn-sm me-2">Añadir a Favoritos</a>
+            {% endif %}
+            {% if cita.usuario_id == session['usuario_id'] %}
+              <a href="/citas/editar/{{ cita.id }}" class="btn btn-warning btn-sm me-2">Editar</a>
+              <a href="/citas/borrar/{{ cita.id }}" class="btn btn-danger btn-sm">Borrar</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12">
+        <p class="alert alert-info">No hay citas disponibles para mostrar.</p>
+      </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
-</div>
-</div>
-{% else %}
-<div class="col-12">
-<p class="alert alert-info">No hay citas disponibles para mostrar.</p>
-</div>
-{% endfor %}
-</div>
