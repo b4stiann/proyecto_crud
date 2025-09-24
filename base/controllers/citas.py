@@ -1,34 +1,95 @@
+from flask import Blueprint, render_template, request, redirect, session, flash
 from base.models.citas_model import Cita
 from base.models.usuario_model import Usuario
-from flask import *
 
-bp = Blueprint('/citas', methods = ['GET', 'POST'])
-#Ruta para agregar una nueva cita, solo los usuarios autenticados pueden acceder
-#Valida la cita y muestra si es necesario.
+
+bp = Blueprint('citas', __name__)
+
+
+@bp.get('/')
+def dashboard():
+    if not session.get('usuario_id'):
+        return redirect('/')
+    usuario = Usuario.obtener_por_id(session['usuario_id'])
+    citas = Cita.obtener_todas()
+    favoritos = Cita.obtener_favoritos_de_usuario(session['usuario_id'])
+    favoritos_ids = {c['id'] for c in favoritos}
+    return render_template('dashboard.html', usuario=usuario, citas=citas, favoritos=favoritos, favoritos_ids=favoritos_ids)
+
+
+@bp.post('/agregar')
 def agregar_cita():
-    if 'usuario_id' not in session:
+    if not session.get('usuario_id'):
         return redirect('/')
     if not Cita.validar_cita(request.form):
         return redirect('/citas')
     data = {
-        'cita' : request.form['cita'],
-        'usuario_id' : session['usuario_id']
+        'cita': request.form['cita'].strip(),
+        'autor': request.form['autor'].strip(),
+        'usuario_id': session['usuario_id'],
     }
-    Cita.guardar_cita(data)
+    Cita.crear(data)
     return redirect('/citas')
 
-@bp.route('/editar/<int:cita_id>')
-def editar_cita(cita_id):
-    #ruta para mostrar el formulario de edicion de una cita. Como validacion adicional, verifica que el usuario autenticado sea el unico que pueda editar la cita.
-    if 'usuario_id' not in session:
-        return redirect('/')
-    cita = Cita.obtener_por_id({'id': cita_id})
-    if not cita or cita.usuario_id != session['usuario_id']:
-        flash("No tienes permiso para editar esta cita.", 'error')
-        return redirect('/citas')
-    return render_template('editar_cita.html')
 
-@bp.route('/editar/<int:cita_id>', methods=['POST'])
-def procesar_edicion(cita_id):
-    #Procesa la edicion de una cita, validando que el usuario autenticado sea el unico que pueda editar la cita.
-    #Solamente los usuarios autenticados pueden acceder.
+@bp.get('/editar/<int:cita_id>')
+def editar_cita(cita_id: int):
+    if not session.get('usuario_id'):
+        return redirect('/')
+    cita = Cita.obtener_por_id(cita_id)
+    if not cita or cita['usuario_id'] != session['usuario_id']:
+        flash('No tienes permiso para editar esta cita.', 'cita')
+        return redirect('/citas')
+    return render_template('edita_cita.html', cita=cita)
+
+
+@bp.post('/editar/<int:cita_id>')
+def procesar_edicion(cita_id: int):
+    if not session.get('usuario_id'):
+        return redirect('/')
+    cita = Cita.obtener_por_id(cita_id)
+    if not cita or cita['usuario_id'] != session['usuario_id']:
+        flash('No tienes permiso para editar esta cita.', 'cita')
+        return redirect('/citas')
+    if not Cita.validar_cita(request.form):
+        return redirect(f'/citas/editar/{cita_id}')
+    Cita.actualizar({'id': cita_id, 'cita': request.form['cita'].strip(), 'autor': request.form['autor'].strip()})
+    return redirect('/citas')
+
+
+@bp.get('/borrar/<int:cita_id>')
+def borrar_cita(cita_id: int):
+    if not session.get('usuario_id'):
+        return redirect('/')
+    cita = Cita.obtener_por_id(cita_id)
+    if not cita or cita['usuario_id'] != session['usuario_id']:
+        flash('No tienes permiso para borrar esta cita.', 'cita')
+        return redirect('/citas')
+    Cita.borrar(cita_id)
+    return redirect('/citas')
+
+
+@bp.get('/agregar_favorito/<int:cita_id>')
+def agregar_favorito(cita_id: int):
+    if not session.get('usuario_id'):
+        return redirect('/')
+    Cita.agregar_favorito(session['usuario_id'], cita_id)
+    return redirect('/citas')
+
+
+@bp.get('/remover_favorito/<int:cita_id>')
+def remover_favorito(cita_id: int):
+    if not session.get('usuario_id'):
+        return redirect('/')
+    Cita.quitar_favorito(session['usuario_id'], cita_id)
+    return redirect('/citas')
+
+
+@bp.get('/perfil')
+def perfil():
+    if not session.get('usuario_id'):
+        return redirect('/')
+    usuario = Usuario.obtener_por_id(session['usuario_id'])
+    citas = Cita.obtener_por_usuario(session['usuario_id'])
+    total_citas = len(citas)
+    return render_template('perfil.html', usuario=usuario, citas=citas, total_citas=total_citas)
