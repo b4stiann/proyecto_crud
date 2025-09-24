@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container mt-4">
+<h1>¡Hola, {{ usuario.nombre|capitalize }}!</h1>
+
+<h2>Citas Disponibles</h2>
+<div class="row">
+{% for cita in citas %}
+<div class="col-md-6 mb-4">
+<div class="card h-100 shadow-sm">
+<div class="card-body">
+<p class="card-text">"{{ cita.cita }}" - por <strong>{{ cita.autor.split(' ')[0]|capitalize }} {{
+cita.autor.split(' ')[1]|capitalize }}</strong></p>
+<p class="text-muted small">Publicado el: {{ cita.creado_en | format_date }}</p>
+<hr>
+<a href="/citas/agregar_favorito/{{ cita.id }}" class="btn btn-primary btn-sm me-2">Añadir a
+Favoritos</a>
+{% if cita.autor_id == session['usuario_id'] %}
+<a href="/citas/editar/{{ cita.id }}" class="btn btn-warning btn-sm me-2">Editar</a>
+<a href="/citas/borrar/{{ cita.id }}" class="btn btn-danger btn-sm">Borrar</a>
+{% endif %}
+</div>
+</div>
+</div>
+{% else %}
+<div class="col-12">
+<p class="alert alert-info">No hay citas disponibles para mostrar.</p>
+</div>
+{% endfor %}
+</div>
